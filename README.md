@@ -1,6 +1,6 @@
 # family_shopping
 
-A new Flutter project.
+Developing an application to make shopping more organized.
 
 ## Getting Started
 
