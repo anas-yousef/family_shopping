@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 
 import './widgets/new_shopping_item.dart';
 import './models/shopping_item.dart';
+import 'controllers/dialog_builder.dart';
 import './widgets/initial_build.dart';
+import 'widgets/loading_indicator.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,6 +22,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.pink,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const MyHomePage(title: 'Shopping Items'),
     );
@@ -79,18 +82,27 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _refreshSharedItems() {
+    DialogBuilder(context).showLoadingIndicator('Loading');
+
+    final fetchedItems = fetchShoppingItems();
+    fetchedItems.then((value) {
+      print('Refreshed');
+      setState(() {
+        futureShoppingItems = fetchedItems;
+      });
+      DialogBuilder(context).hideOpenDialog();
+    }).catchError((error) {
+      DialogBuilder(context).hideOpenDialog();
+      throw Exception('Failed to create shopping item.');
+    });
+
+    return;
+  }
+
   void _refreshItems() {
     if (newShoppingItems.isEmpty) {
-      final fetchedItems = fetchShoppingItems();
-      fetchedItems.then((value) {
-        print('Refreshed');
-        setState(() {
-          futureShoppingItems = fetchedItems;
-        });
-      }).catchError((error) {
-        throw Exception('Failed to create shopping item.');
-      });
-
+      _refreshSharedItems();
       return;
     }
     final createResponse = addShoppingItems(newShoppingItems);
@@ -100,7 +112,9 @@ class _MyHomePageState extends State<MyHomePage> {
         futureShoppingItems = fetchShoppingItems();
         newShoppingItems.clear();
       });
+      DialogBuilder(context).hideOpenDialog();
     }).catchError((error) {
+      DialogBuilder(context).hideOpenDialog();
       throw Exception('Failed to create shopping item.');
     });
   }
@@ -124,12 +138,14 @@ class _MyHomePageState extends State<MyHomePage> {
     double appFullWidth = (MediaQuery.of(context).size.width) * 1;
     return Scaffold(
       appBar: _appBar,
-      body: InitialBuild(
-        appFullHeight: appFullHeight,
-        appFullWidth: appFullWidth,
-        newShoppingItems: newShoppingItems,
-        futureShoppingItems: futureShoppingItems,
-      ),
+      body: Stack(children: [
+        InitialBuild(
+          appFullHeight: appFullHeight,
+          appFullWidth: appFullWidth,
+          newShoppingItems: newShoppingItems,
+          futureShoppingItems: futureShoppingItems,
+        ),
+      ]),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -138,7 +154,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: const Icon(
               Icons.refresh,
             ),
-            onPressed: () => _refreshItems(),
+            onPressed: () => _refreshSharedItems(),
           ),
           const SizedBox(
             width: 20,

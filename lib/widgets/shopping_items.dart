@@ -53,9 +53,21 @@ class ShoppingItemsHolder extends StatelessWidget {
   Widget _drawDivider(int index) {
     return Column(
       children: [
-        Divider(
-          thickness: 10,
-          color: Colors.black,
+        Container(
+          decoration:
+              BoxDecoration(border: Border.all(color: Colors.blueAccent)),
+          padding: const EdgeInsets.all(3.0),
+          margin: const EdgeInsets.all(
+            10,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Items to add',
+              )
+            ],
+          ),
         ),
         _renderShoppingItem(index, newShoppingItems[index]),
       ],
